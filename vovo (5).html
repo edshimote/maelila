@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Para a Minha Vovó 🌊</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Great+Vibes&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    :root {
+      --ocean:    #0077b6;
+      --sky:      #90e0ef;
+      --wave:     #00b4d8;
+      --sand:     #f4d9a0;
+      --sand-dark:#d4a96a;
+      --seafoam:  #a8dadc;
+      --sun:      #ffd166;
+      --coral:    #ef8c6a;
+      --cream:    #fffdf5;
+      --dark:     #03253a;
+      --card-bg:  rgba(0,119,182,0.18);
+    }
+
+    html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+
+    body {
+      background: var(--dark);
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--cream);
+      overflow-x: hidden;
+      min-height:100vh; min-height:100dvh;
+    }
+
+    /* ══ SKY + OCEAN BG (splash fallback) ══ */
+    .shared-bg {
+      position:fixed; inset:0; z-index:0;
+      background:
+        radial-gradient(ellipse 50% 40% at 80% 5%, #ffd16644 0%, transparent 55%),
+        linear-gradient(180deg,#0a1628 0%,#0d2b4e 25%,#0077b6 55%,#00b4d8 72%,#90e0ef 82%,#caf0f8 88%,#f4d9a0 94%,#e8c87a 100%);
+      transition: opacity .5s ease;
+    }
+
+    /* ══ GIF BEACH BG ══ */
+    .beach-gif-bg {
+      position:fixed; inset:0; z-index:0;
+      opacity:0; pointer-events:none;
+      transition: opacity 1.4s ease;
+    }
+    .beach-gif-bg img {
+      width:100%; height:100%;
+      object-fit:cover; object-position:center bottom;
+      display:block;
+    }
+    .beach-gif-bg::after {
+      content:'';
+      position:absolute; inset:0;
+      background: linear-gradient(180deg,rgba(0,10,30,0.42) 0%,rgba(0,20,50,0.28) 45%,rgba(0,10,30,0.52) 100%);
+    }
+    .beach-gif-bg.show { opacity:1; }
+    .shared-bg.hide-bg { opacity:0; }
+
+    /* animated shimmer on water surface */
+    .water-shimmer {
+      position:fixed; z-index:1; pointer-events:none;
+      left:0; right:0;
+      bottom:0; height:38%;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          rgba(255,255,255,0.03) 2px,
+          transparent 4px,
+          transparent 18px
+        ),
+        linear-gradient(180deg, transparent 0%, rgba(0,180,216,0.18) 40%, rgba(0,119,182,0.35) 100%);
+      animation: shimmerWave 4s ease-in-out infinite alternate;
+    }
+    @keyframes shimmerWave {
+      from { opacity:.6; transform:scaleX(1); }
+      to   { opacity:1;  transform:scaleX(1.02); }
+    }
+
+    /* wave layers */
+    .waves {
+      position:fixed; bottom:0; left:0; right:0; z-index:2;
+      height:120px; pointer-events:none; overflow:hidden;
+    }
+    .wave {
+      position:absolute; bottom:0; left:-200px; right:-200px; height:100%;
+    }
+    .wave svg { width:200%; height:100%; }
+    .wave1 { animation: waveMove1 7s ease-in-out infinite alternate; opacity:.7; }
+    .wave2 { animation: waveMove2 5s ease-in-out infinite alternate; opacity:.45; bottom:6px; }
+    .wave3 { animation: waveMove1 9s ease-in-out infinite alternate-reverse; opacity:.25; bottom:12px; }
+    @keyframes waveMove1 {
+      from { transform:translateX(0); }
+      to   { transform:translateX(60px); }
+    }
+    @keyframes waveMove2 {
+      from { transform:translateX(-40px); }
+      to   { transform:translateX(40px); }
+    }
+
+    /* floating bubbles / sea foam */
+    .bubbles { position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .bubble {
+      position:absolute; border-radius:50%;
+      background:rgba(255,255,255,var(--op,.12));
+      border:1px solid rgba(255,255,255,.2);
+      width:var(--sz,8px); height:var(--sz,8px);
+      bottom:-20px; left:var(--x,50%);
+      animation:bubbleRise var(--dur,9s) ease-in var(--del,0s) infinite;
+    }
+    @keyframes bubbleRise {
+      0%   { transform:translateY(0) translateX(0);  opacity:0; }
+      10%  { opacity:.7; }
+      80%  { opacity:.3; }
+      100% { transform:translateY(-90vh) translateX(var(--sway,20px)); opacity:0; }
+    }
+
+    /* stars / sparkles in sky */
+    .shared-stars {
+      position:fixed; inset:0; z-index:1; pointer-events:none;
+      background-image:
+        radial-gradient(1.5px 1.5px at  7% 10%, #ffffffcc 0%, transparent 100%),
+        radial-gradient(1px   1px   at 20% 18%, #ffd16699  0%, transparent 100%),
+        radial-gradient(1px   1px   at 45% 8%,  #ffffffbb  0%, transparent 100%),
+        radial-gradient(2px   2px   at 68% 14%, #ffffffaa  0%, transparent 100%),
+        radial-gradient(1px   1px   at 85%  6%, #ffd16677  0%, transparent 100%),
+        radial-gradient(1px   1px   at 15% 30%, #ffffff88  0%, transparent 100%),
+        radial-gradient(1px   1px   at 55% 22%, #ffffff66  0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 30%  5%, #ffd16688  0%, transparent 100%),
+        radial-gradient(1px   1px   at 78% 25%, #ffffffaa  0%, transparent 100%),
+        radial-gradient(1px   1px   at 92% 18%, #ffffff77  0%, transparent 100%);
+      animation: twinkle 5s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity:.5; }
+      to   { opacity:1; }
+    }
+
+    /* seagulls */
+    .seagulls { position:fixed; top:8%; left:0; right:0; z-index:3; pointer-events:none; }
+    .gull {
+      position:absolute; font-size:clamp(.8rem,2.5vw,1.4rem); opacity:.5;
+      animation:gullFly var(--dur,18s) linear var(--del,0s) infinite;
+    }
+    .gull:nth-child(1){ top:0%;    --dur:20s; --del:0s;   --y:-8px; }
+    .gull:nth-child(2){ top:30%;   --dur:15s; --del:-6s;  --y:6px;  font-size:clamp(.6rem,2vw,1rem); opacity:.35; }
+    .gull:nth-child(3){ top:15%;   --dur:24s; --del:-10s; --y:-4px; font-size:clamp(.5rem,1.5vw,.9rem); opacity:.3; }
+    @keyframes gullFly {
+      0%   { transform:translateX(-60px) translateY(0); }
+      50%  { transform:translateX(50vw) translateY(var(--y,0px)); }
+      100% { transform:translateX(110vw) translateY(0); }
+    }
+
+    /* ══ SPLASH ══ */
+    #splash {
+      position:fixed; inset:0; z-index:9999;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      overflow:hidden;
+      transition:opacity 1s ease, visibility 1s ease;
+    }
+    #splash.hide { opacity:0; visibility:hidden; pointer-events:none; }
+
+    .splash-deco {
+      position:absolute; pointer-events:none;
+      font-size:clamp(2.5rem,8vw,5rem); opacity:.18;
+      animation:floatDeco 5s ease-in-out infinite alternate;
+    }
+    .splash-deco:nth-child(1){ left:3%;  bottom:22%; }
+    .splash-deco:nth-child(2){ right:3%; top:12%; animation-delay:-2s; }
+    .splash-deco:nth-child(3){ left:10%; top:18%; animation-delay:-1s; font-size:clamp(1.5rem,5vw,3rem); opacity:.13; }
+    .splash-deco:nth-child(4){ right:10%;bottom:28%; animation-delay:-3s; font-size:clamp(1.5rem,5vw,3rem); opacity:.13; }
+    @keyframes floatDeco {
+      from { transform:translateY(0) rotate(-4deg); }
+      to   { transform:translateY(-18px) rotate(4deg); }
+    }
+
+    .splash-content {
+      text-align:center; position:relative; z-index:10;
+      padding:0 20px; width:100%; max-width:580px;
+      animation:fadeDown .8s ease both;
+    }
+    @keyframes fadeDown {
+      from { opacity:0; transform:translateY(-26px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .splash-tag {
+      font-size:clamp(.65rem,2.5vw,.82rem);
+      letter-spacing:.45em; text-transform:uppercase;
+      color:var(--sun); margin-bottom:clamp(10px,3vw,18px);
+      text-shadow:0 0 20px #ffd16688;
+    }
+
+    .splash-title {
+      font-family:'Great Vibes', cursive;
+      font-size:clamp(2.8rem,13vw,7.5rem);
+      line-height:1.1;
+      background:linear-gradient(160deg, #ffd166 0%, #ffffff 35%, #90e0ef 65%, #ffd166 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      filter:drop-shadow(0 0 30px #00b4d888);
+      margin-bottom:clamp(6px,2vw,12px);
+      animation:titleGlow 5s ease-in-out infinite alternate;
+    }
+    @keyframes titleGlow {
+      from { filter:drop-shadow(0 0 20px #00b4d855); }
+      to   { filter:drop-shadow(0 0 50px #ffd16677); }
+    }
+
+    .splash-sub {
+      font-size:clamp(.85rem,3.5vw,1rem);
+      letter-spacing:.12em; color:var(--seafoam); font-style:italic;
+      margin-bottom:clamp(32px,8vw,56px);
+    }
+
+    .enter-btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:clamp(8px,3vw,14px);
+      padding:clamp(18px,5vw,26px) clamp(32px,10vw,64px);
+      font-family:'Nunito', sans-serif;
+      font-size:clamp(1.1rem,4.5vw,1.4rem);
+      font-weight:700; letter-spacing:.1em; color:var(--dark);
+      background:linear-gradient(135deg, #ffd166 0%, #f4d9a0 40%, #ffd166 100%);
+      border:none; border-radius:100px;
+      cursor:pointer; text-transform:uppercase;
+      touch-action:manipulation; -webkit-appearance:none;
+      box-shadow:0 0 0 2px #ffd16655, 0 0 40px #ffd16677, 0 0 80px #00b4d833, 0 8px 32px #00000066;
+      animation:btnPulse 2.2s ease-in-out infinite;
+      transition:transform .15s; width:min(90vw,420px);
+    }
+    .enter-btn:hover  { transform:scale(1.05); }
+    .enter-btn:active { transform:scale(.94); }
+    @keyframes btnPulse {
+      0%,100% { box-shadow:0 0 0 2px #ffd16655,0 0 40px #ffd16677,0 0 80px #00b4d833,0 8px 32px #0007; }
+      50%      { box-shadow:0 0 0 8px #ffd16622,0 0 70px #ffd16699,0 0 120px #00b4d855,0 8px 32px #0007; }
+    }
+
+    .btn-icon {
+      font-size:clamp(1.3rem,5vw,1.8rem);
+      animation:heartbeat 1.4s ease-in-out infinite;
+    }
+    @keyframes heartbeat {
+      0%,100% { transform:scale(1); }
+      14%     { transform:scale(1.3); }
+      28%     { transform:scale(1); }
+      42%     { transform:scale(1.18); }
+    }
+
+    .btn-hint {
+      margin-top:clamp(14px,4vw,22px);
+      font-size:clamp(.68rem,2.5vw,.82rem);
+      letter-spacing:.25em; color:#90e0ef99;
+      text-transform:uppercase;
+    }
+
+    /* ══ MAIN SITE ══ */
+    #site { opacity:0; transition:opacity 1s ease .2s; pointer-events:none; }
+    #site.visible { opacity:1; pointer-events:auto; }
+
+    .petals-canvas { position:fixed; inset:0; z-index:3; pointer-events:none; }
+
+    .floating-items {
+      position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;
+    }
+    .fi {
+      position:absolute; bottom:-60px;
+      font-size:var(--s,1.2rem); left:var(--x,50%);
+      animation:floatUp var(--dur,8s) ease-in var(--del,0s) infinite; opacity:0;
+    }
+    @keyframes floatUp {
+      0%   { transform:translateY(0) rotate(0deg);      opacity:0; }
+      10%  { opacity:.8; }
+      90%  { opacity:.25; }
+      100% { transform:translateY(-115vh) rotate(20deg); opacity:0; }
+    }
+
+    .wrapper {
+      position:relative; z-index:10;
+      max-width:860px; margin:0 auto;
+      padding:0 clamp(14px,5vw,28px) clamp(120px,20vw,160px);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align:center;
+      padding:clamp(48px,10vw,80px) 0 clamp(24px,5vw,40px);
+      animation:fadeDown .9s ease both;
+    }
+    .hero-tag {
+      font-size:clamp(.7rem,2.8vw,.88rem);
+      letter-spacing:.35em; text-transform:uppercase;
+      color:var(--sun); margin-bottom:clamp(10px,3vw,18px);
+      text-shadow:0 0 16px #ffd16666;
+    }
+    .hero h1 {
+      font-family:'Great Vibes', cursive;
+      font-size:clamp(2.8rem,11vw,6.5rem);
+      line-height:1.1;
+      background:linear-gradient(160deg, #ffd166 0%, #ffffff 40%, #90e0ef 75%, #ffd166 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      filter:drop-shadow(0 0 28px #00b4d877);
+      margin-bottom:clamp(8px,2vw,14px);
+    }
+    .hero-sub {
+      font-size:clamp(.88rem,3.5vw,1.05rem);
+      letter-spacing:.12em; color:var(--seafoam); font-style:italic;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display:flex; align-items:center; justify-content:center;
+      gap:12px; margin:clamp(20px,5vw,34px) auto; opacity:.75;
+    }
+    .divider span { font-size:clamp(1rem,4vw,1.3rem); }
+    .divider::before, .divider::after {
+      content:''; flex:1; height:1px;
+      background:linear-gradient(to right, transparent, #90e0ef55, transparent);
+    }
+
+    /* ── PHOTO ── */
+    .photo-section {
+      display:flex; justify-content:center;
+      margin:clamp(28px,7vw,48px) 0 clamp(36px,9vw,60px);
+      animation:fadeUp .9s .3s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(28px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .photo-frame { position:relative; display:inline-block; }
+
+    .photo-frame::before {
+      content:''; position:absolute;
+      inset:clamp(-10px,-3vw,-14px); border-radius:50%;
+      background:conic-gradient(
+        #ffd166 0deg, #90e0ef 50deg, #00b4d8 100deg,
+        #ffffff 150deg, #ffd166 200deg, #00b4d8 260deg,
+        #90e0ef 310deg, #ffd166 360deg
+      );
+      animation:spin 8s linear infinite; z-index:-1;
+    }
+    .photo-frame::after {
+      content:''; position:absolute;
+      inset:clamp(-3px,-1vw,-5px); border-radius:50%;
+      background:var(--dark); z-index:-1;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .photo-frame img {
+      width:clamp(160px,48vw,230px);
+      height:clamp(160px,48vw,230px);
+      border-radius:50%; object-fit:cover; display:block;
+      border:3px solid #0a3a55;
+      box-shadow:0 0 36px #00b4d855, 0 0 70px #ffd16633;
+    }
+
+    .photo-glow {
+      position:absolute; inset:-40px; border-radius:50%;
+      background:radial-gradient(circle, #00b4d828 0%, transparent 70%);
+      animation:glow 3s ease-in-out infinite; z-index:-2;
+    }
+    @keyframes glow {
+      0%,100% { transform:scale(1);   opacity:.5; }
+      50%      { transform:scale(1.2); opacity:1; }
+    }
+
+    .hearts-around { position:absolute; inset:-50px; border-radius:50%; pointer-events:none; }
+    .hearts-around span {
+      position:absolute; font-size:clamp(.75rem,3vw,1rem);
+      animation:orbit var(--dur,6s) linear infinite;
+      animation-delay:var(--del,0s);
+    }
+    @keyframes orbit {
+      from { transform:rotate(0deg)   translateX(var(--orbit-r,120px)) rotate(0deg); }
+      to   { transform:rotate(360deg) translateX(var(--orbit-r,120px)) rotate(-360deg); }
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: linear-gradient(145deg, rgba(0,60,100,0.55) 0%, rgba(0,30,60,0.65) 100%);
+      border:1px solid #90e0ef33;
+      border-radius:clamp(16px,4vw,24px);
+      padding:clamp(22px,6vw,44px) clamp(16px,5.5vw,48px);
+      margin:clamp(20px,5vw,32px) 0;
+      backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+      box-shadow:0 8px 48px #00000066, 0 0 0 1px #90e0ef11, inset 0 1px 0 #ffffff0e;
+      animation:fadeUp .9s ease both;
+      position:relative; overflow:hidden;
+    }
+    .card::before {
+      content:''; position:absolute;
+      top:-60px; right:-60px; width:180px; height:180px; border-radius:50%;
+      background:radial-gradient(circle, #00b4d81a 0%, transparent 70%);
+    }
+    .card::after {
+      content:''; position:absolute;
+      bottom:-60px; left:-60px; width:160px; height:160px; border-radius:50%;
+      background:radial-gradient(circle, #ffd1661a 0%, transparent 70%);
+    }
+
+    .card-label {
+      font-size:clamp(.65rem,2.5vw,.8rem);
+      letter-spacing:.32em; text-transform:uppercase;
+      color:var(--sun); margin-bottom:clamp(12px,3vw,18px);
+      text-shadow:0 0 12px #ffd16655;
+    }
+    .card p {
+      font-size:clamp(.98rem,4vw,1.18rem);
+      line-height:2; color:#d8f4f8; font-weight:300;
+      position:relative; z-index:1;
+    }
+    .card p em { font-style:italic; color:#ffffff; }
+
+    /* ── POEMS ── */
+    .poem-card { text-align:center; }
+    .poem-title {
+      font-family:'Great Vibes', cursive;
+      font-size:clamp(1.8rem,7vw,2.6rem);
+      background:linear-gradient(135deg, #ffd166, #ffffff 50%, #90e0ef);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      margin-bottom:clamp(14px,4vw,22px);
+      filter:drop-shadow(0 0 10px #00b4d855);
+    }
+    .poem-card p { font-style:italic; font-size:clamp(.95rem,3.8vw,1.18rem); line-height:2.2; color:#caf0f8; }
+
+    /* ── FINAL ── */
+    .final {
+      text-align:center;
+      padding:clamp(36px,9vw,60px) 0 clamp(20px,5vw,30px);
+      animation:fadeUp 1s .4s ease both;
+    }
+    .big-text {
+      font-family:'Great Vibes', cursive;
+      font-size:clamp(2.4rem,10vw,5rem);
+      background:linear-gradient(160deg, #ffd166, #ffffff 40%, #90e0ef 70%, #ffd166 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      filter:drop-shadow(0 0 24px #00b4d877);
+      line-height:1.3;
+      animation:titleGlow 4s ease-in-out infinite alternate;
+    }
+
+    /* ── MUSIC BTN ── */
+    #musicBtn {
+      position:fixed;
+      bottom:clamp(18px,5vw,28px); right:clamp(18px,5vw,28px);
+      z-index:9998;
+      width:clamp(46px,12vw,54px); height:clamp(46px,12vw,54px);
+      border-radius:50%;
+      background:linear-gradient(135deg, #ffd166, #00b4d8);
+      border:2px solid #ffffff33;
+      color:var(--dark); font-size:clamp(1.2rem,4vw,1.5rem);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 24px #00b4d855;
+      animation:musicPulse 2.5s ease-in-out infinite;
+      transition:transform .2s; touch-action:manipulation;
+    }
+    #musicBtn:active { transform:scale(.88); }
+    @keyframes musicPulse {
+      0%,100% { box-shadow:0 4px 24px #00b4d855; }
+      50%      { box-shadow:0 4px 40px #ffd16688; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shared-bg" id="sharedBg"></div>
+<div class="beach-gif-bg" id="beachGif"><img src="https://media1.giphy.com/media/sfjfPOe8DKptm/giphy.gif" alt="praia"/></div>
+<div class="water-shimmer"></div>
+<div class="shared-stars"></div>
+
+<!-- seagulls -->
+<div class="seagulls">
+  <div class="gull">🕊️</div>
+  <div class="gull">🕊️</div>
+  <div class="gull">🕊️</div>
+</div>
+
+<!-- animated waves -->
+<div class="waves">
+  <div class="wave wave1">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,60 C180,100 360,20 540,60 C720,100 900,20 1080,60 C1260,100 1350,40 1440,60 L1440,120 L0,120 Z" fill="rgba(0,180,216,0.55)"/>
+    </svg>
+  </div>
+  <div class="wave wave2">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,80 C200,40 400,100 600,70 C800,40 1000,90 1200,65 C1320,50 1380,80 1440,70 L1440,120 L0,120 Z" fill="rgba(0,119,182,0.45)"/>
+    </svg>
+  </div>
+  <div class="wave wave3">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,90 C160,60 320,110 480,85 C640,60 800,105 960,80 C1120,55 1300,95 1440,75 L1440,120 L0,120 Z" fill="rgba(144,224,239,0.25)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- bubbles -->
+<div class="bubbles" id="bubbles"></div>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="splash-deco">🌊</div>
+  <div class="splash-deco">🐚</div>
+  <div class="splash-deco">✨</div>
+  <div class="splash-deco">🌸</div>
+
+  <div class="splash-content">
+    <p class="splash-tag">✦ &nbsp; Para a Minha Vovó &nbsp; ✦</p>
+    <h1 class="splash-title">Com Todo<br/>Meu Amor</h1>
+    <p class="splash-sub">uma surpresa especial pra você 🌊🤍</p>
+
+    <button class="enter-btn" id="enterBtn">
+      <span class="btn-icon">🌊</span>
+      Abrir Surpresa
+      <span class="btn-icon">🌊</span>
+    </button>
+
+    <p class="btn-hint">toque para entrar</p>
+  </div>
+</div>
+
+<!-- ══ MAIN SITE ══ -->
+<div id="site">
+
+  <canvas class="petals-canvas" id="petals"></canvas>
+  <div class="floating-items" id="floatItems"></div>
+
+  <div class="wrapper">
+
+    <header class="hero">
+      <p class="hero-tag">✦ 8 de Março · Feliz Dia das Mulheres ✦</p>
+      <h1>Para a Minha Vovó</h1>
+      <p class="hero-sub">com todo o meu amor e gratidão 🌊🤍</p>
+    </header>
+
+    <div class="divider"><span>🐚</span></div>
+
+    <!-- PHOTO -->
+    <div class="photo-section">
+      <div class="photo-frame">
+        <div class="photo-glow"></div>
+        <img src="https://i.postimg.cc/WDLV3sYm/image.jpg" alt="Minha vovó"
+             onerror="this.src='https://via.placeholder.com/230x230/03253a/ffd166?text=🌊'"/>
+        <div class="hearts-around" id="heartsAround">
+          <span style="--dur:7s;--del:0s">🌸</span>
+          <span style="--dur:9s;--del:-3s">🐚</span>
+          <span style="--dur:6s;--del:-1.5s">🤍</span>
+          <span style="--dur:8s;--del:-4.5s">🌊</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"><span>🌊</span></div>
+
+    <!-- MESSAGE -->
+    <div class="card" style="animation-delay:.1s">
+      <p class="card-label">✦ Uma mensagem do coração ✦</p>
+      <p>
+        Vovó, hoje é o Dia das Mulheres — e você é a mulher mais especial da nossa família. 🌊🤍
+        <br/><br/>
+        Não tem como colocar em palavras tudo o que você representa pra mim. Você é carinhosa, amorosa, daquelas que dão amor sem medir, que fazem qualquer lugar parecer lar. Cada momento do seu lado ficou guardado aqui no coração, e eu sou muito grato por cada um deles.
+        <br/><br/>
+        Obrigado por tudo que você fez e faz pela nossa família. Pelo cuidado, pelo carinho, por sempre estar presente. Você é a base de tudo que temos.
+        <br/><br/>
+        <em>Te amo muito, vovó. Hoje e sempre. 🤍</em>
+      </p>
+    </div>
+
+    <div class="divider"><span>✨</span></div>
+
+    <!-- POEM 1 -->
+    <div class="card poem-card" style="animation-delay:.2s">
+      <p class="poem-title">Mulher do Mar</p>
+      <p>
+        Você é como o mar, vovó —<br/>
+        profunda, gentil e sem fim;<br/>
+        um amor que não tem margens,<br/>
+        que sempre chega até mim.<br/>
+        <br/>
+        Como as ondas que voltam sempre<br/>
+        à beira da areia quente;<br/>
+        você está sempre de volta —<br/>
+        carinhosa, presente, quente.
+      </p>
+    </div>
+
+    <!-- POEM 2 -->
+    <div class="card poem-card" style="animation-delay:.3s">
+      <p class="poem-title">Obrigado, Vovó</p>
+      <p>
+        Obrigado por cada abraço dado,<br/>
+        por cada história contada com amor;<br/>
+        pela mesa sempre posta com carinho,<br/>
+        pelo lar que você fez com calor.<br/>
+        <br/>
+        Tudo que sou carrega um pouco<br/>
+        do seu jeito gentil de amar;<br/>
+        e é por isso que sou grato —<br/>
+        por ter você, pra vida inteira.
+      </p>
+    </div>
+
+    <!-- POEM 3 -->
+    <div class="card poem-card" style="animation-delay:.4s">
+      <p class="poem-title">Promessa</p>
+      <p>
+        Prometo nunca deixar passar<br/>
+        um dia sem te dizer que te amo;<br/>
+        porque um amor como o seu<br/>
+        merece ser lembrado todo ano.<br/>
+        <br/>
+        Que a vida te dê de volta<br/>
+        todo o amor que você já deu;<br/>
+        você merece o melhor do mundo —<br/>
+        minha vovó, meu porto, meu lar.
+      </p>
+    </div>
+
+    <div class="divider"><span>🌸</span></div>
+
+    <div class="final">
+      <div class="big-text">Te amo muito,<br/>vovó 🌊🤍</div>
+    </div>
+
+  </div>
+</div>
+
+<button id="musicBtn" style="display:none" title="Música">🎵</button>
+
+<script>
+  // Bulletproof audio setup
+  const AUDIO_SRC = 'https://temp.sh/AaLeC/ANAVITORIA_-_Ai_Amor_Audio_-_AnavitoriaVEVO_youtube_1.mp3'; // coloque o MP3 na mesma pasta do index.html
+  let audio = null;
+  let playing = false;
+
+  function buildAudio() {
+    const a = new Audio(AUDIO_SRC);
+    a.loop = true;
+    a.volume = 0.22;
+    a.preload = 'auto';
+    return a;
+  }
+  // Pre-build so browser can start buffering
+  audio = buildAudio();
+
+  /* orbit radius responsive */
+  function setOrbitRadius() {
+    const r = Math.min(window.innerWidth * 0.32, 130);
+    document.querySelectorAll('.hearts-around span').forEach(s => {
+      s.style.setProperty('--orbit-r', r + 'px');
+      s.style.transformOrigin = r + 'px ' + r + 'px';
+    });
+  }
+  window.addEventListener('resize', setOrbitRadius);
+  setOrbitRadius();
+
+  /* bubbles */
+  const bubbleContainer = document.getElementById('bubbles');
+  for (let i = 0; i < 28; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const sz = 4 + Math.random() * 14;
+    const op = (.06 + Math.random() * .14).toFixed(2);
+    b.style.cssText = `--sz:${sz}px;--op:${op};--x:${Math.random()*100}%;--dur:${8+Math.random()*14}s;--del:${-Math.random()*16}s;--sway:${(Math.random()-.5)*40}px`;
+    bubbleContainer.appendChild(b);
+  }
+
+  /* enter */
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    // Play audio — must be triggered directly inside click handler
+    try {
+      // Rebuild fresh instance to avoid any stale state
+      audio = buildAudio();
+      audio.play().then(() => {
+        playing = true;
+        updateMusicBtn();
+      }).catch(err => {
+        console.warn('play() rejected:', err.message);
+        // Last resort: user-initiated HTML5 audio element
+        const tag = document.createElement('audio');
+        tag.src = AUDIO_SRC;
+        tag.loop = true;
+        tag.volume = 0.22;
+        tag.autoplay = true;
+        document.body.appendChild(tag);
+        tag.play().then(() => {
+          audio = tag;
+          playing = true;
+          updateMusicBtn();
+        }).catch(e => console.error('All audio attempts failed:', e));
+      });
+    } catch(e) {
+      console.error('Audio exception:', e);
+    }
+
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('site').classList.add('visible');
+    document.getElementById('musicBtn').style.display = 'flex';
+    document.getElementById('beachGif').classList.add('show');
+    document.getElementById('sharedBg').classList.add('hide-bg');
+    initSite();
+  });
+
+  function updateMusicBtn() {
+    const btn = document.getElementById('musicBtn');
+    btn.textContent = playing ? '🎵' : '🔇';
+    btn.title = playing ? 'Pausar' : 'Tocar';
+  }
+  document.getElementById('musicBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!audio) return;
+    if (playing) { audio.pause(); playing = false; }
+    else { audio.play().catch(()=>{}); playing = true; }
+    updateMusicBtn();
+  });
+
+  function initSite() {
+    /* floating beach items */
+    const container = document.getElementById('floatItems');
+    const emojis = ['🌊','🐚','🌸','✨','🐠','🌺','⭐','💫','🌙','🦋','🌻','🐟'];
+    const count = window.innerWidth < 480 ? 16 : 26;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'fi';
+      const s = (.4 + Math.random() * 1.1).toFixed(2);
+      el.style.cssText = `--x:${Math.random()*100}%;--s:${s}rem;--dur:${5+Math.random()*9}s;--del:${-Math.random()*14}s`;
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      container.appendChild(el);
+    }
+
+    /* sand particles canvas */
+    const canvas = document.getElementById('petals');
+    const ctx = canvas.getContext('2d');
+    const isMobile = window.innerWidth < 500;
+    let W, H;
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    /* mix of sea foam, petals, sparkles */
+    const colors = ['#ffffff', '#90e0ef', '#caf0f8', '#ffd166', '#a8dadc', '#f4d9a0'];
+    const count2 = isMobile ? 22 : 40;
+    const particles = Array.from({ length: count2 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * -window.innerHeight,
+      r: 2 + Math.random() * 5,
+      speed: .2 + Math.random() * .55,
+      drift: (Math.random() - .5) * .6,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - .5) * .03,
+      alpha: .12 + Math.random() * .36,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      type: Math.random() > .5 ? 'circle' : 'petal'
+    }));
+
+    function drawParticle(p) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      if (p.type === 'circle') {
+        ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+      } else {
+        ctx.ellipse(0, 0, p.r, p.r * 1.8, 0, 0, Math.PI * 2);
+      }
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let animId;
+    function loop() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => {
+        p.y += p.speed; p.x += p.drift; p.rot += p.rotSpeed;
+        if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; }
+        drawParticle(p);
+      });
+      animId = requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) cancelAnimationFrame(animId);
+      else loop();
+    });
+
+    loop();
+  }
+</script>
+</body>
+</html>
